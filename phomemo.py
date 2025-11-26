@@ -15,8 +15,10 @@ class Phomemo:
     NAMES = ["D30", "D35"]
 
     def __init__(self):
-        self._name = None
-        self._mac = None
+        self._name = "Printer Not Found"
+        self._mac = "<MAC Address Not Found>"
+
+        self.find()
 
     def find(self) -> bool:
         """
@@ -62,10 +64,17 @@ class Phomemo:
         return self._name
 
     def __str__(self):
-        return f"Phomemo{self.NAME}-{self.mac})"
+        s = f"Phomemo({self.name},mac={self.mac}"
+
+        port = self.port
+        if port:
+            s += f",port={port}"
+
+        s += ")"
+        return s
 
     def __repr__(self):
-        return f"Phomemo{self.Name}(mac={self.mac})"
+        return self.__str__()
 
     @property
     def info(self):
@@ -110,14 +119,17 @@ class Phomemo:
             text=True,
         )
 
+        port = None
         for line in result.stdout.strip().split("\n"):
             if self._mac in line:
                 parts = line.split(":", 1)
                 if len(parts) >= 2:
                     port = parts[0].strip()
-                    return port
 
-        return None
+        if port:
+            port = "/dev/" + port
+
+        return port
 
 
 if __name__ == "__main__":
