@@ -1,0 +1,7 @@
+[server]
+url = "http://192.168.0.120:8800"
+
+[keyring]
+system="inventree"
+field_username = "user"
+field_password = "password"
