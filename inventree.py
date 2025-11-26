@@ -147,14 +147,11 @@ class PartLabel:
         self.api = InvenTreeAPI()
         self._url = self.api._config["server"]["url"]
 
-        # Base image
-        self._img = Image.new(
-            mode="RGB", size=(self.WIDTH, self.HEIGHT), color=self.COLOR
-        )
-
         # Other defaults
         self.font_size = self.FONT_SIZE
         self.font_name = "NotoSansMono-Regular"
+
+        self._img = None
 
     @property
     def part(self) -> InvenTreePart:
@@ -226,6 +223,11 @@ class PartLabel:
     def label_image(self) -> Image.Image:
         """Part label image with QR code."""
 
+        # Base image
+        self._img = Image.new(
+            mode="RGB", size=(self.WIDTH, self.HEIGHT), color=self.COLOR
+        )
+
         # Paste QR code onto base image
         img_qr = self.qr_gen(size=self.HEIGHT)
         self._img.paste(img_qr, (0, 0))
@@ -254,7 +256,7 @@ class PartLabel:
 
         return self._img
 
-    def save_label(self, filename: str | None = None) -> str:
+    def to_file(self, filename: str | None = None) -> str:
         """Save part label image to file."""
 
         if filename is None:
