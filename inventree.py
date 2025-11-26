@@ -1,5 +1,5 @@
-# inventree_api.py
-# REST Access to v0.13 InvenTree API
+# inventree.py
+# REST Access to v0.13 InvenTree API and generation of Part Label with QR Code.
 
 import tomllib
 import keyring
