@@ -1,6 +1,11 @@
-import subprocess
+# phomemo.py
+# Phomemo Bluetooth printer interface for Linux.
+#
+# Supports D30 and D35 models.
+# Device should previously be paired and set up to auto start RFCOMM service.
+#
 
-devs = subprocess.run(["bluetoothctl", "devices"], capture_output=True, text=True)
+import subprocess
 
 
 class Phomemo:
