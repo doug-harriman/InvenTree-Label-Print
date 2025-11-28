@@ -5,3 +5,7 @@ url = "http://192.168.0.120:8800"
 system="inventree"
 field_username = "user"
 field_password = "password"
+
+[fonts]
+path="/usr/share/fonts/"
+font="NotoSansMono-Regular"

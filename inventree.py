@@ -13,11 +13,11 @@ from textwrap import wrap
 class InvenTreeAPI:
     """Class to interact with InvenTree API."""
 
-    def __init__(self, cfg_file="config.toml"):
+    def __init__(self, cfg_file: str | Path = "config.toml"):
         # Defaults
         self.config_load(cfg_file)
 
-    def config_load(self, cfg_file: str = "config.toml") -> None:
+    def config_load(self, cfg_file: str | Path = "config.toml") -> None:
         """Load configuration from TOML file."""
 
         if not Path(cfg_file).is_file():
@@ -134,22 +134,30 @@ class PartLabel:
     COLOR = "white"
     FONT_SIZE = 24
 
-    def __init__(self, part: InvenTreePart):
+    def __init__(self, part: InvenTreePart | int):
         """Initialize part label."""
 
         if part is None:
             raise ValueError("Part must be provided to generate label")
+
+        if isinstance(part, int):
+            part = InvenTreePart(num=part)
+
         if not isinstance(part, InvenTreePart):
             raise TypeError("part must be an instance of InvenTreePart")
         self._part = part
 
-        # Load up server info to get URL
+        # Load up server info to get URLcfg_file: str | Path = "config.toml"
         self.api = InvenTreeAPI()
-        self._url = self.api._config["server"]["url"]
+        self._config = self.api._config
+        self._url = self._config["server"]["url"]
+
+        # Quick clean of URL
+        self._config["server"]["url"] = self._config["server"]["url"].rstrip("/")
 
         # Other defaults
         self.font_size = self.FONT_SIZE
-        self.font_name = "NotoSansMono-Regular"
+        self.font_name = self._config["fonts"]["font"]
 
         self._img = None
 
@@ -181,15 +189,22 @@ class PartLabel:
         return self._font_name
 
     @font_name.setter
-    def font_name(self, name: str) -> None:
+    def font_name(self, name: str | Path) -> None:
         """Set font name."""
 
         if not isinstance(name, str):
             raise TypeError("Font name must be a string")
 
+        # Drop extension if provided
+        name = Path(name).stem
+
+        # Find font file
+        font_files = list(Path(self._config["fonts"]["path"]).rglob(f"{name}.*"))
+        if len(font_files) == 0:
+            raise ValueError(f"Font file not found for font: {name}")
+
         try:
-            font = ImageFont.load_default(size=self.font_size)
-            font = ImageFont.truetype(name + ".ttf", self.font_size)
+            font = ImageFont.truetype(font_files[0], self.font_size)
         except Exception as exc:
             raise ValueError(f"Could not load font: {name}") from exc
 
@@ -236,7 +251,7 @@ class PartLabel:
         draw = ImageDraw.Draw(self._img)  # draw context
 
         # Line 1 and 2
-        lines = wrap(self.part.name, width=12)
+        lines = wrap(self.part.name, width=14)
         if len(lines) > 2:
             lines = lines[:2]
         draw.text((self.HEIGHT + 2, 2), text=lines[0], font=self.font, fill=0)
