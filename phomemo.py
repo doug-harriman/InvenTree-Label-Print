@@ -13,6 +13,24 @@ import math
 from pathlib import Path
 
 
+# Helper functions from phomemo_d30/image_helper.py
+def split_image(image):
+    chunks = image.height // 255
+
+    for chunk in range(chunks + 1):
+        i = image.crop((0, chunk * 255, image.width, chunk * 255 + 255))
+        yield i
+
+
+def image_to_bits(image: Image.Image, threshold: int = 127):
+    return [
+        bytearray(
+            [1 if image.getpixel((x, y)) > threshold else 0 for x in range(image.width)]
+        )
+        for y in range(image.height)
+    ]
+
+
 class Phomemo:
     """Class representing a Phomemo Bluetooth printer."""
 
@@ -197,24 +215,20 @@ class Phomemo:
 
             # Print image
             # from phomemo_30/print_text.py:print_image()
-            output = "1f1124001b401d7630000c004001"
-
-            for chunk in image_helper.split_image(image):
-                output = bytearray.fromhex(output)
-
-                bits = image_helper.image_to_bits(chunk)
+            for chunk in split_image(img):
+                data = bytearray.fromhex("1f1124001b401d7630000c004001")
+                bits = image_to_bits(chunk)
                 for line in bits:
                     for byte_num in range(self.HEIGHT // 8):
                         byte = 0
                         for bit in range(8):
                             pixel = line[byte_num * 8 + bit]
                             byte |= (pixel & 0x01) << (7 - bit)
-                        output.append(byte)
+                        data.append(byte)
 
-                ser.write(output)
+                ser.write(data)
                 ser.flush()
-
-                output = ""
+                data = ""
 
 
 if __name__ == "__main__":
