@@ -6,13 +6,10 @@ All Phomemo code leveraged directly from: https://github.com/polskafan/phomemo_d
 
 # Status
 
-* InvenTree Python API requires newer version of InvenTree.
-    * Upgrade looks like a separate project.
-* Falling back to simpler method: cli for PN & description.
-* Proto of image generator working, see `inventreelabel.py`
-* The code in "phomemo_d30" is capable of printing to the Phomemo D35.
-* Would like to get it to auto-connect Bluetooth printer.
-* Need to get image converted per the example code in the d30 dir.
+* Able to generate labels with part name, num and QR code.
+* Able to find BT serial port device for paired printer on Linux.
+* Able to send an image to printer, but image is not yet correct.
+    * See issues in phomemo.py
 
 # Installation
 
