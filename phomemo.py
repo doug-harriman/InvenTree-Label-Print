@@ -6,6 +6,11 @@
 #
 
 import subprocess
+import PIL
+from PIL import Image
+import serial
+import math
+from pathlib import Path
 
 
 class Phomemo:
@@ -13,6 +18,9 @@ class Phomemo:
 
     # Specifically supported devices
     NAMES = ["D30", "D35"]
+
+    WIDTH = 320
+    HEIGHT = 96
 
     def __init__(self):
         self._name = "Printer Not Found"
@@ -130,6 +138,83 @@ class Phomemo:
             port = "/dev/" + port
 
         return port
+
+    def print_file(self, filename: str):
+        """Print an image file to the printer."""
+
+        if not Path(filename).is_file():
+            raise FileNotFoundError(f"File not found: {filename}")
+
+        img = Image.open(filename)
+        self.print_image(img)
+
+    def print_image(self, img: Image):
+        """Print an image to the printer."""
+
+        if not self.is_connected:
+            raise RuntimeError("Printer not connected")
+
+        port = self.port
+        if port is None:
+            raise RuntimeError("Printer port not found")
+
+        # Resize aspect ratio assumes landscape orientation
+        img_w, img_h = img.size
+        if img_w < img_h:
+            # Rotate to landscape
+            img = img.rotate(270, expand=True)
+            img_w, img_h = img.size
+
+        # Check image size and resize as needed.
+        # From phomemo_d30/image_helper.py:preprocess_image
+        aspect = img_w / img_h
+        new_size = (self.WIDTH, math.floor(self.WIDTH / aspect))
+        img = img.resize(new_size)
+
+        # Invert
+        img = PIL.ImageOps.invert(img.convert("RGB")).convert("1")
+
+        # Now rotate to portrait for printing
+        img = img.rotate(270)
+
+        # Open serial port
+        with serial.Serial(port, timeout=10) as ser:
+            # Send header
+            # from phomemo_30/print_text.py:header()
+            job_header = [
+                "1f1138",
+                "1f11121f1113",
+                "1f1109",
+                "1f1111",
+                "1f1119",
+                "1f1107",
+                "1f110a1f110202",
+            ]
+
+            for packet in job_header:
+                ser.write(bytes.fromhex(packet))
+                ser.flush()
+
+            # Print image
+            # from phomemo_30/print_text.py:print_image()
+            output = "1f1124001b401d7630000c004001"
+
+            for chunk in image_helper.split_image(image):
+                output = bytearray.fromhex(output)
+
+                bits = image_helper.image_to_bits(chunk)
+                for line in bits:
+                    for byte_num in range(self.HEIGHT // 8):
+                        byte = 0
+                        for bit in range(8):
+                            pixel = line[byte_num * 8 + bit]
+                            byte |= (pixel & 0x01) << (7 - bit)
+                        output.append(byte)
+
+                ser.write(output)
+                ser.flush()
+
+                output = ""
 
 
 if __name__ == "__main__":
