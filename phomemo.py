@@ -5,6 +5,12 @@
 # Device should previously be paired and set up to auto start RFCOMM service.
 #
 
+# ISSUES:
+# * Text is not printing at all
+# * Have to send image twice to get it to print.
+# * QR code is printing on both ends of label
+# * Image fills full label, need a margin.
+
 import subprocess
 import PIL
 from PIL import Image
@@ -178,22 +184,22 @@ class Phomemo:
 
         # Resize aspect ratio assumes landscape orientation
         img_w, img_h = img.size
-        if img_w < img_h:
-            # Rotate to landscape
-            img = img.rotate(270, expand=True)
-            img_w, img_h = img.size
+        # if img_w < img_h:
+        #     # Rotate to landscape
+        #     img = img.rotate(270)
+        #     img_w, img_h = img.size
 
         # Check image size and resize as needed.
         # From phomemo_d30/image_helper.py:preprocess_image
-        aspect = img_w / img_h
-        new_size = (self.WIDTH, math.floor(self.WIDTH / aspect))
-        img = img.resize(new_size)
+        # aspect = img_w / img_h
+        # new_size = (self.HEIGHT, math.floor(self.HEIGHT / aspect))
+        # img = img.resize(new_size)
 
         # Invert
-        img = PIL.ImageOps.invert(img.convert("RGB")).convert("1")
+        # img = PIL.ImageOps.invert(img.convert("RGB")).convert("1")
 
         # Now rotate to portrait for printing
-        img = img.rotate(270)
+        # img = img.rotate(270)
 
         # Open serial port
         with serial.Serial(port, timeout=10) as ser:
