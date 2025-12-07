@@ -4,6 +4,8 @@ This project is intended to generate and print labels for InvenTree parts on a P
 
 All Phomemo code leveraged directly from: https://github.com/polskafan/phomemo_d30
 
+Most mature Linux Phomemo project: https://github.com/vivier/phomemo-tools/tree/master
+
 # Status
 
 * Able to generate labels with part name, num and QR code.
